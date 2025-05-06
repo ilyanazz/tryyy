@@ -62,8 +62,20 @@
       const current = snap.data().points || 0;
       const updated = isAdd ? current + change : current - change;
 
-      await updateDoc(ref, { points: updated });
-      pointsSpan.textContent = updated;
+      try {
+        await updateDoc(ref, { points: updated });
+
+        // Re-fetch to confirm and update UI
+        const updatedSnap = await getDoc(ref);
+        if (updatedSnap.exists()) {
+          pointsSpan.textContent = updatedSnap.data().points || 0;
+        }
+
+        // Optionally clear input
+        document.getElementById("points-change").value = "";
+      } catch (error) {
+        alert("Failed to update points: " + error.message);
+      }
     };
 
     const leaderboardDiv = document.getElementById("leaderboard");
@@ -73,7 +85,7 @@
       leaderboardDiv.innerHTML = "";
       snapshot.forEach((docSnap, idx) => {
         const d = docSnap.data();
-        leaderboardDiv.innerHTML += `<div>${idx + 1}. ID: ${docSnap.id} — ${d.points} pts</div>`;
+        leaderboardDiv.innerHTML += `<div>${idx + 1}. ID: ${docSnap.id} — ${d.points || 0} pts</div>`;
       });
     });
   </script>
