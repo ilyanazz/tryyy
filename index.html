@@ -24,8 +24,8 @@
 
   <div class="staff-controls" id="staffControls" style="display:none;">
     <p>Staff Mode Enabled</p>
-    <button onclick="adjustPoints(5)">+5</button>
-    <button onclick="adjustPoints(-5)">-5</button>
+    <button onclick="adjustPoints(5)">+1</button>
+    <button onclick="adjustPoints(-5)">-1</button>
   </div>
 
   <div class="leaderboard">
@@ -40,7 +40,7 @@
 
     // Mock database
     let users = {
-      user1: { name: 'John', points: 120 },
+      user1: { name: 'Alifah', points: 0 },
       user2: { name: 'Alice', points: 180 },
       user3: { name: 'Bob', points: 100 }
     };
@@ -77,7 +77,7 @@
 
     function promptStaff() {
       const passcode = prompt("Enter staff passcode:");
-      if (passcode === "STAFF123") {
+      if (passcode === "nana") {
         document.getElementById("staffControls").style.display = "block";
         document.getElementById("staffLogin").style.display = "none";
       } else {
