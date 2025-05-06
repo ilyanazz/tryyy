@@ -7,11 +7,13 @@
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #f4f6f9;
+      color: #333;
       padding: 40px 20px;
       margin: 0;
       display: flex;
       justify-content: center;
     }
+
     .container {
       background: white;
       border-radius: 16px;
@@ -20,20 +22,26 @@
       width: 100%;
       max-width: 500px;
     }
+
     h2 {
       text-align: center;
       margin-bottom: 20px;
+      color: #2c3e50;
     }
+
     .points {
       font-size: 20px;
       font-weight: bold;
+      margin: 10px 0;
       text-align: center;
     }
+
     .staff-controls {
       text-align: center;
       margin-top: 20px;
       display: none;
     }
+
     .staff-controls button {
       padding: 10px 20px;
       margin: 0 10px;
@@ -42,158 +50,184 @@
       background: #3498db;
       color: white;
       cursor: pointer;
+      transition: background 0.3s;
     }
+
+    .staff-controls button:hover {
+      background: #2980b9;
+    }
+
     .leaderboard, .history {
       margin-top: 30px;
     }
-    ol, ul {
-      padding-left: 0;
+
+    .leaderboard h3, .history h3 {
+      margin-bottom: 10px;
+      color: #2c3e50;
+    }
+
+    ol {
+      padding: 0;
+      margin: 0;
       list-style: none;
     }
-    li {
+
+    ol li {
       background: #ecf0f1;
-      margin-bottom: 10px;
-      padding: 10px 15px;
-      border-radius: 10px;
+      margin-bottom: 12px;
+      padding: 14px 20px;
+      border-radius: 12px;
       display: flex;
       justify-content: space-between;
+      align-items: center;
     }
+
+    .history ul {
+      padding-left: 0;
+    }
+
+    .history li {
+      background: #f0f0f0;
+      margin-bottom: 8px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .history li span {
+      color: #7f8c8d;
+    }
+
     #staffLogin {
       text-align: center;
       margin-top: 20px;
     }
+
     #staffLogin button {
       padding: 10px 20px;
+      border: none;
       background: #27ae60;
       color: white;
-      border: none;
       border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #staffLogin button:hover {
+      background: #1e8449;
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <h2>Welcome, <span id="username">User</span></h2>
-  <div class="points">Points: <span id="points">0</span></div>
+  <div class="container">
+    <h2>Welcome, <span id="username">User</span></h2>
+    <div class="points">Points: <span id="points">0</span></div>
 
-  <div id="staffLogin">
-    <button onclick="promptStaff()">Staff Login</button>
+    <div id="staffLogin">
+      <button onclick="promptStaff()">Staff Login</button>
+    </div>
+
+    <div class="staff-controls" id="staffControls">
+      <p>Staff Mode Enabled</p>
+      <button onclick="adjustPoints(1)">+1</button>
+      <button onclick="adjustPoints(-1)">-1</button>
+    </div>
+
+    <div class="leaderboard">
+      <h3>Leaderboard</h3>
+      <ol id="leaderboardList"></ol>
+    </div>
+
+    <div class="history">
+      <h3>Point History</h3>
+      <ul id="historyList"></ul>
+    </div>
   </div>
 
-  <div class="staff-controls" id="staffControls">
-    <p>Staff Mode Enabled</p>
-    <button onclick="adjustPoints(1)">+1</button>
-    <button onclick="adjustPoints(-1)">-1</button>
-  </div>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('id') || 'user1';
+    const isStaff = urlParams.get('staff') === 'true';
 
-  <div class="leaderboard">
-    <h3>Leaderboard</h3>
-    <ol id="leaderboardList"></ol>
-  </div>
+    // Default users (used only if nothing in localStorage)
+    let defaultUsers = {
+      user1: { name: 'John', points: 120, history: [{ date: '2025-05-01', change: 50 }, { date: '2025-05-04', change: 70 }] },
+      user2: { name: 'Alice', points: 180, history: [{ date: '2025-05-02', change: 100 }, { date: '2025-05-04', change: 80 }] },
+      user3: { name: 'Bob', points: 100, history: [{ date: '2025-05-01', change: 60 }, { date: '2025-05-03', change: 40 }] }
+    };
 
-  <div class="history">
-    <h3>Point History</h3>
-    <ul id="historyList"></ul>
-  </div>
-</div>
+    // Load from localStorage or use default
+    let users = JSON.parse(localStorage.getItem('usersData')) || defaultUsers;
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    function saveUsersToStorage() {
+      localStorage.setItem('usersData', JSON.stringify(users));
+    }
 
-<script>
-  // TODO: Replace with your Firebase config
- const firebaseConfig = {
-  apiKey: "AIzaSyDaRLmnE2t8v_bXtm_r_RrnuMhtJBfomug",
-  authDomain: "test2-74b30.firebaseapp.com",
-  databaseURL: "https://test2-74b30-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "test2-74b30",
-  storageBucket: "test2-74b30.firebasestorage.app",
-  messagingSenderId: "776427276353",
-  appId: "1:776427276353:web:0c7285a031ff3271069ec0"
-};
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-
-  const urlParams = new URLSearchParams(window.location.search);
-  const userId = urlParams.get('id') || 'user1';
-  const isStaff = urlParams.get('staff') === 'true';
-  let currentUser = null;
-
-  async function loadUser() {
-    try {
-      const doc = await db.collection("users").doc(userId).get();
-      if (!doc.exists) {
-        alert("User not found");
-        return;
-      }
-      currentUser = doc.data();
-      document.getElementById("username").textContent = currentUser.name;
-      document.getElementById("points").textContent = currentUser.points;
+    function loadUser() {
+      const user = users[userId];
+      if (!user) return alert('User not found');
+      document.getElementById('username').textContent = user.name;
+      document.getElementById('points').textContent = user.points;
 
       if (isStaff) {
-        document.getElementById("staffControls").style.display = "block";
+        document.getElementById('staffControls').style.display = 'block';
       }
 
       loadLeaderboard();
-      loadHistory(currentUser.history || []);
-    } catch (error) {
-      console.error("Error loading user:", error);
+      loadHistory();
     }
-  }
 
-  async function adjustPoints(amount) {
-    if (!currentUser) return;
+    function adjustPoints(amount) {
+      const user = users[userId];
+      user.points += amount;
 
-    const today = new Date().toISOString().split("T")[0];
-    const history = currentUser.history || [];
-    history.push({ date: today, change: amount });
+      const today = new Date().toISOString().split('T')[0];
+      if (!user.history) user.history = [];
+      user.history.push({ date: today, change: amount });
 
-    currentUser.points += amount;
-    currentUser.history = history;
-
-    await db.collection("users").doc(userId).set(currentUser);
-
-    document.getElementById("points").textContent = currentUser.points;
-    loadLeaderboard();
-    loadHistory(history);
-  }
-
-  async function loadLeaderboard() {
-    const list = document.getElementById("leaderboardList");
-    list.innerHTML = "";
-
-    const snapshot = await db.collection("users").orderBy("points", "desc").get();
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const li = document.createElement("li");
-      li.innerHTML = `<span>${data.name}</span><span>${data.points} pts</span>`;
-      list.appendChild(li);
-    });
-  }
-
-  function loadHistory(history) {
-    const list = document.getElementById("historyList");
-    list.innerHTML = "";
-    history.slice().reverse().forEach(entry => {
-      const li = document.createElement("li");
-      li.textContent = `${entry.change > 0 ? "+" : ""}${entry.change} pts on ${entry.date}`;
-      list.appendChild(li);
-    });
-  }
-
-  function promptStaff() {
-    const passcode = prompt("Enter staff passcode:");
-    if (passcode === "STAFF123") {
-      document.getElementById("staffControls").style.display = "block";
-      document.getElementById("staffLogin").style.display = "none";
-    } else {
-      alert("Incorrect code.");
+      saveUsersToStorage();
+      document.getElementById('points').textContent = user.points;
+      loadLeaderboard();
+      loadHistory();
     }
-  }
 
-  loadUser();
-</script>
+    function loadLeaderboard() {
+      const sortedUsers = Object.entries(users).sort((a, b) => b[1].points - a[1].points);
+      const list = document.getElementById('leaderboardList');
+      list.innerHTML = '';
+      for (const [id, data] of sortedUsers) {
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <span>${data.name}</span>
+          <span>${data.points} pts</span>
+        `;
+        list.appendChild(li);
+      }
+    }
+
+    function loadHistory() {
+      const historyList = document.getElementById('historyList');
+      historyList.innerHTML = '';
+      const user = users[userId];
+      if (!user.history || user.history.length === 0) return;
+
+      for (const entry of user.history.slice().reverse()) {
+        const li = document.createElement('li');
+        li.innerHTML = `${entry.change > 0 ? '+' : ''}${entry.change} pts on <span>${entry.date}</span>`;
+        historyList.appendChild(li);
+      }
+    }
+
+    function promptStaff() {
+      const passcode = prompt("Enter staff passcode:");
+      if (passcode === "STAFF123") {
+        document.getElementById("staffControls").style.display = "block";
+        document.getElementById("staffLogin").style.display = "none";
+      } else {
+        alert("Incorrect code.");
+      }
+    }
+
+    loadUser();
+  </script>
 </body>
 </html>
