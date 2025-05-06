@@ -1,68 +1,114 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>QR Points Tracker</title>
+  <title>Leaderboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; max-width: 500px; margin: auto; }
-    .points { font-size: 24px; font-weight: bold; }
-    .leaderboard { margin-top: 20px; }
-    .leaderboard h3 { margin-bottom: 5px; }
-    .leaderboard ol { padding-left: 20px; }
-    .staff-controls { margin-top: 20px; }
-    button { padding: 10px; margin-right: 10px; }
-    #staffLogin { margin-top: 20px; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f9;
+      color: #333;
+      padding: 40px 20px;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #2c3e50;
+    }
+
+    ol {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    li {
+      background: #ecf0f1;
+      margin-bottom: 12px;
+      padding: 14px 20px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+
+    li:hover {
+      background: #dce4e6;
+    }
+
+    .name {
+      font-weight: 500;
+    }
+
+    .points {
+      background: #3498db;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 14px;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    .history {
+      margin-top: 30px;
+    }
+
+    .history h3 {
+      margin-bottom: 10px;
+      color: #2c3e50;
+    }
+
+    .history ul {
+      padding-left: 20px;
+    }
+
+    .history li {
+      background: #f0f0f0;
+      margin-bottom: 8px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+
+    .history li span {
+      color: #7f8c8d;
+    }
   </style>
 </head>
 <body>
-  <h2>Welcome, <span id="username">User</span></h2>
-  <div class="points">Points: <span id="points">0</span></div>
-
-  <div id="staffLogin">
-    <button onclick="promptStaff()">Staff Login</button>
-  </div>
-
-  <div class="staff-controls" id="staffControls" style="display:none;">
-    <p>Staff Mode Enabled</p>
-    <button onclick="adjustPoints(5)">+1</button>
-    <button onclick="adjustPoints(-5)">-1</button>
-  </div>
-
-  <div class="leaderboard">
-    <h3>Leaderboard</h3>
+  <div class="container">
+    <h2>Leaderboard</h2>
     <ol id="leaderboardList"></ol>
+
+    <div class="history">
+      <h3>Point History</h3>
+      <ul id="historyList"></ul>
+    </div>
   </div>
 
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get('id') || 'user1';
-    const isStaff = urlParams.get('staff') === 'true'; // Example: ?id=user1&staff=true
-
-    // Mock database
+    // Mock database with point history
     let users = {
-      user1: { name: 'Alifah', points: 0 },
-      user2: { name: 'Alice', points: 180 },
-      user3: { name: 'Bob', points: 100 }
+      user1: { name: 'John', points: 120, history: [ { date: '2025-05-01', change: 50 }, { date: '2025-05-03', change: 30 }, { date: '2025-05-05', change: -10 }] },
+      user2: { name: 'Alice', points: 180, history: [ { date: '2025-05-02', change: 60 }, { date: '2025-05-04', change: -20 }] },
+      user3: { name: 'Bob', points: 100, history: [ { date: '2025-05-01', change: 40 }, { date: '2025-05-04', change: 20 }] }
     };
-
-    function loadUser() {
-      const user = users[userId];
-      if (!user) return alert('User not found');
-      document.getElementById('username').textContent = user.name;
-      document.getElementById('points').textContent = user.points;
-
-      if (isStaff) {
-        document.getElementById('staffControls').style.display = 'block';
-      }
-
-      loadLeaderboard();
-    }
-
-    function adjustPoints(amount) {
-      users[userId].points += amount;
-      document.getElementById('points').textContent = users[userId].points;
-      loadLeaderboard();
-    }
 
     function loadLeaderboard() {
       const sortedUsers = Object.entries(users).sort((a, b) => b[1].points - a[1].points);
@@ -70,22 +116,33 @@
       list.innerHTML = '';
       for (const [id, data] of sortedUsers) {
         const li = document.createElement('li');
-        li.textContent = `${data.name} – ${data.points} pts`;
+        li.innerHTML = `
+          <span class="name">${data.name}</span>
+          <span class="points">${data.points} pts</span>
+        `;
         list.appendChild(li);
       }
     }
 
-    function promptStaff() {
-      const passcode = prompt("Enter staff passcode:");
-      if (passcode === "nana") {
-        document.getElementById("staffControls").style.display = "block";
-        document.getElementById("staffLogin").style.display = "none";
-      } else {
-        alert("Incorrect code.");
+    function loadHistory() {
+      const historyList = document.getElementById('historyList');
+      historyList.innerHTML = '';
+      
+      // Loop through each user's history and display it
+      for (const userId in users) {
+        const user = users[userId];
+        for (const entry of user.history) {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <strong>${user.name}</strong> - ${entry.change >= 0 ? '+' : ''}${entry.change} pts on <span>${entry.date}</span>
+          `;
+          historyList.appendChild(li);
+        }
       }
     }
 
-    loadUser();
+    loadLeaderboard();
+    loadHistory();
   </script>
 </body>
 </html>
