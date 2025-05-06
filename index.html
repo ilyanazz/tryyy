@@ -11,13 +11,19 @@
     .leaderboard ol { padding-left: 20px; }
     .staff-controls { margin-top: 20px; }
     button { padding: 10px; margin-right: 10px; }
+    #staffLogin { margin-top: 20px; }
   </style>
 </head>
 <body>
   <h2>Welcome, <span id="username">User</span></h2>
   <div class="points">Points: <span id="points">0</span></div>
 
+  <div id="staffLogin">
+    <button onclick="promptStaff()">Staff Login</button>
+  </div>
+
   <div class="staff-controls" id="staffControls" style="display:none;">
+    <p>Staff Mode Enabled</p>
     <button onclick="adjustPoints(5)">+5</button>
     <button onclick="adjustPoints(-5)">-5</button>
   </div>
@@ -66,6 +72,16 @@
         const li = document.createElement('li');
         li.textContent = `${data.name} – ${data.points} pts`;
         list.appendChild(li);
+      }
+    }
+
+    function promptStaff() {
+      const passcode = prompt("Enter staff passcode:");
+      if (passcode === "STAFF123") {
+        document.getElementById("staffControls").style.display = "block";
+        document.getElementById("staffLogin").style.display = "none";
+      } else {
+        alert("Incorrect code.");
       }
     }
 
