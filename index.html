@@ -44,6 +44,7 @@
           const data = snap.data();
           pointsSpan.textContent = data.points || 0;
         } else {
+          nameSpan.textContent = "Not found";
           pointsSpan.textContent = "0";
         }
       },
@@ -62,20 +63,8 @@
       const current = snap.data().points || 0;
       const updated = isAdd ? current + change : current - change;
 
-      try {
-        await updateDoc(ref, { points: updated });
-
-        // Re-fetch to confirm and update UI
-        const updatedSnap = await getDoc(ref);
-        if (updatedSnap.exists()) {
-          pointsSpan.textContent = updatedSnap.data().points || 0;
-        }
-
-        // Optionally clear input
-        document.getElementById("points-change").value = "";
-      } catch (error) {
-        alert("Failed to update points: " + error.message);
-      }
+      await updateDoc(ref, { points: updated });
+      pointsSpan.textContent = updated;
     };
 
     const leaderboardDiv = document.getElementById("leaderboard");
@@ -85,7 +74,7 @@
       leaderboardDiv.innerHTML = "";
       snapshot.forEach((docSnap, idx) => {
         const d = docSnap.data();
-        leaderboardDiv.innerHTML += `<div>${idx + 1}. ID: ${docSnap.id} — ${d.points || 0} pts</div>`;
+        leaderboardDiv.innerHTML += `<div>${idx + 1}. ${d.name || 'Unnamed'} - ${d.points} pts</div>`;
       });
     });
   </script>
